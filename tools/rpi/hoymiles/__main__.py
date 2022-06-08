@@ -96,7 +96,7 @@ def poll_inverter(inverter, csv, retries=4):
                         print()
                         if (csv):
                             my_date = datetime.now()
-                            with open("test.txt", "a") as myfile:
+                            with open("/home/pi/daily.csv", "a") as myfile:
                                 myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + "\n")
                             sys.exit(0)
 
