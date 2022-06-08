@@ -15,8 +15,9 @@ import yaml
 from yaml.loader import SafeLoader
 import paho.mqtt.client
 import hoymiles
+import sys
 
-def main_loop():
+def main_loop(csv):
     """Main loop"""
     inverters = [
             inverter for inverter in ahoy_config.get('inverters', [])
@@ -25,9 +26,9 @@ def main_loop():
     for inverter in inverters:
         if hoymiles.HOYMILES_DEBUG_LOGGING:
             print(f'Poll inverter {inverter["serial"]}')
-        poll_inverter(inverter)
+        poll_inverter(inverter, csv)
 
-def poll_inverter(inverter, retries=4):
+def poll_inverter(inverter, csv, retries=4):
     """
     Send/Receive command_queue, initiate status poll on inverter
 
@@ -92,7 +93,12 @@ def poll_inverter(inverter, retries=4):
                     for string in data['strings']:
                         print(f' string{string_id}=voltage:{string["voltage"]}, current:{string["current"]}, power:{string["power"]}, total:{string["energy_total"]/1000}, daily:{string["energy_daily"]}', end='')
                         string_id = string_id + 1
-                    print()
+                        print()
+                        if (csv):
+                            my_date = datetime.now()
+                            with open("test.txt", "a") as myfile:
+                                myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + "\n")
+                            sys.exit(0)
 
                 if mqtt_client:
                     mqtt_send_status(mqtt_client, inverter_ser, data,
@@ -189,6 +195,8 @@ if __name__ == '__main__':
         help="Enable transaction logging output")
     parser.add_argument("--verbose", action="store_true", default=False,
         help="Enable debug output")
+    parser.add_argument("--csv", action="store_true", default=False,
+        help="Store daily into csv format")
     global_config = parser.parse_args()
 
     # Load ahoy.yml config file
@@ -263,7 +271,7 @@ if __name__ == '__main__':
         while True:
             t_loop_start = time.time()
 
-            main_loop()
+            main_loop(global_config.csv)
 
             print('', end='', flush=True)
 
@@ -272,3 +280,4 @@ if __name__ == '__main__':
 
     except KeyboardInterrupt:
         sys.exit()
+
