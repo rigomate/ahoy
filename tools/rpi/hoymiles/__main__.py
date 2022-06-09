@@ -97,7 +97,7 @@ def poll_inverter(inverter, csv, retries=4):
                         if (csv):
                             my_date = datetime.now()
                             with open("/home/pi/daily.csv", "a") as myfile:
-                                myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + "\n")
+                                myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + ";" + str(string["energy_total"]) + "\n")
                             sys.exit(0)
 
                 if mqtt_client:
