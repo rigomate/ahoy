@@ -17,7 +17,7 @@ import paho.mqtt.client
 import hoymiles
 import sys
 
-def main_loop(csv):
+def main_loop(csv, once):
     """Main loop"""
     inverters = [
             inverter for inverter in ahoy_config.get('inverters', [])
@@ -26,9 +26,9 @@ def main_loop(csv):
     for inverter in inverters:
         if hoymiles.HOYMILES_DEBUG_LOGGING:
             print(f'Poll inverter {inverter["serial"]}')
-        poll_inverter(inverter, csv)
+        poll_inverter(inverter, csv, once)
 
-def poll_inverter(inverter, csv, retries=4):
+def poll_inverter(inverter, csv, once, retries=4):
     """
     Send/Receive command_queue, initiate status poll on inverter
 
@@ -98,6 +98,9 @@ def poll_inverter(inverter, csv, retries=4):
                             my_date = datetime.now()
                             with open("/home/pi/daily.csv", "a") as myfile:
                                 myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + ";" + str(string["energy_total"]) + "\n")
+                            sys.exit(0)
+                        if (once):
+                            print(f'power:{string["power"]}, total:{string["energy_total"]/1000}, daily:{string["energy_daily"]}', end='')
                             sys.exit(0)
 
                 if mqtt_client:
@@ -197,6 +200,8 @@ if __name__ == '__main__':
         help="Enable debug output")
     parser.add_argument("--csv", action="store_true", default=False,
         help="Store daily into csv format")
+    parser.add_argument("--once", action="store_true", default=False,
+        help="Only run once and print")
     global_config = parser.parse_args()
 
     # Load ahoy.yml config file
@@ -271,7 +276,7 @@ if __name__ == '__main__':
         while True:
             t_loop_start = time.time()
 
-            main_loop(global_config.csv)
+            main_loop(global_config.csv, global_config.once)
 
             print('', end='', flush=True)
 
