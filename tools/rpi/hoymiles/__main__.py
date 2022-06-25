@@ -100,7 +100,9 @@ def poll_inverter(inverter, csv, once, retries=4):
                                 myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + ";" + str(string["energy_total"]) + "\n")
                             sys.exit(0)
                         if (once):
+                            print()
                             print(f'power:{string["power"]}, total:{string["energy_total"]/1000}, daily:{string["energy_daily"]}', end='')
+                            print()
                             sys.exit(0)
 
                 if mqtt_client:
