@@ -17,7 +17,7 @@ import paho.mqtt.client
 import hoymiles
 import sys
 
-def main_loop(csv, once):
+def main_loop(csv, power, once):
     """Main loop"""
     inverters = [
             inverter for inverter in ahoy_config.get('inverters', [])
@@ -26,9 +26,9 @@ def main_loop(csv, once):
     for inverter in inverters:
         if hoymiles.HOYMILES_DEBUG_LOGGING:
             print(f'Poll inverter {inverter["serial"]}')
-        poll_inverter(inverter, csv, once)
+        poll_inverter(inverter, csv, power, once)
 
-def poll_inverter(inverter, csv, once, retries=4):
+def poll_inverter(inverter, csv, power, once, retries=4):
     """
     Send/Receive command_queue, initiate status poll on inverter
 
@@ -98,6 +98,11 @@ def poll_inverter(inverter, csv, once, retries=4):
                             my_date = datetime.now()
                             with open("/home/pi/daily.csv", "a") as myfile:
                                 myfile.write(my_date.strftime('%Y-%m-%d') + ";" + str(string["energy_daily"]) + ";" + str(string["energy_total"]) + "\n")
+                            sys.exit(0)
+                        if (power):
+                            my_date = datetime.now()
+                            with open("/home/pi/power.csv", "a") as myfile:
+                                myfile.write(my_date.strftime('%Y-%m-%d %H:%M') + ";" + str(string["power"]) + "\n")
                             sys.exit(0)
                         if (once):
                             print()
@@ -204,6 +209,8 @@ if __name__ == '__main__':
         help="Store daily into csv format")
     parser.add_argument("--once", action="store_true", default=False,
         help="Only run once and print")
+    parser.add_argument("--power", action="store_true", default=False,
+        help="Store power into csv format")
     global_config = parser.parse_args()
 
     # Load ahoy.yml config file
@@ -278,7 +285,7 @@ if __name__ == '__main__':
         while True:
             t_loop_start = time.time()
 
-            main_loop(global_config.csv, global_config.once)
+            main_loop(global_config.csv, global_config.power, global_config.once)
 
             print('', end='', flush=True)
 
